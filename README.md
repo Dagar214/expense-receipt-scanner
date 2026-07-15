@@ -1,202 +1,248 @@
-# ReceiptIQ — Expense Receipt Scanner
+# 🧾 ReceiptIQ — Expense Receipt Scanner
 
-An OCR-powered expense tracker. Upload or photograph a receipt, Tesseract.js
-extracts the store name, date, amount, and tax right in the browser, you
-review/edit the details, and it's saved as a categorized expense — with
-monthly summaries and spending insights.
+An OCR-powered expense tracker that turns paper receipts into structured, categorized expense records — automatically.
 
-**Stack:** React (Vite) · Node.js / Express · MongoDB (Mongoose) · Tesseract.js (OCR) · Recharts
+Upload or photograph a receipt, and [Tesseract.js](https://tesseract.projectnaptha.com/) extracts the store name, date, amount, and tax right in your browser. Review and correct the details, save it, and watch your monthly spending insights update in real time.
+
+<p align="left">
+  <img alt="React" src="https://img.shields.io/badge/React-18-61DAFB?logo=react&logoColor=white&labelColor=20232a">
+  <img alt="Node.js" src="https://img.shields.io/badge/Node.js-Express-339933?logo=node.js&logoColor=white&labelColor=20232a">
+  <img alt="MongoDB" src="https://img.shields.io/badge/MongoDB-Atlas-47A248?logo=mongodb&logoColor=white&labelColor=20232a">
+  <img alt="Tesseract.js" src="https://img.shields.io/badge/OCR-Tesseract.js-8A2BE2?labelColor=20232a">
+  <img alt="Vite" src="https://img.shields.io/badge/Build-Vite-646CFF?logo=vite&logoColor=white&labelColor=20232a">
+  <img alt="License" src="https://img.shields.io/badge/License-MIT-blue.svg?labelColor=20232a">
+</p>
+
+**🔗 Live Demo:** [expense-receipt-scanner-rose.vercel.app](https://expense-receipt-scanner-rose.vercel.app/)
+**💻 Source Code:** [github.com/Dagar214/expense-receipt-scanner](https://github.com/Dagar214/expense-receipt-scanner/tree/main)
 
 ---
 
-## 1. Project Structure
+## 📖 Table of Contents
+
+- [Overview](#-overview)
+- [Features](#-features)
+- [Tech Stack](#-tech-stack)
+- [Project Structure](#-project-structure)
+- [How It Works](#-how-it-works)
+- [Getting Started Locally](#-getting-started-locally)
+- [Environment Variables](#-environment-variables)
+- [Deployment](#-deployment)
+- [Design](#-design)
+- [Roadmap Ideas](#-roadmap-ideas)
+- [License](#-license)
+
+---
+
+## 🔍 Overview
+
+Managing expenses manually is time-consuming, especially when transcribing details from physical bills one by one. **ReceiptIQ** automates that process end-to-end:
+
+1. **Capture** a receipt — upload a photo or use your device's camera
+2. **Extract** the text using in-browser OCR (Tesseract.js)
+3. **Parse** store name, date, amount, and tax out of the raw OCR output
+4. **Review & correct** any misread fields before saving
+5. **Track** everything as categorized expenses, with monthly summaries and spending trends
+
+No manual data entry required — just correction where OCR isn't perfect.
+
+---
+
+## ✨ Features
+
+| Category | Details |
+|---|---|
+| 📤 **Receipt Upload** | Upload an image, capture live via webcam, or delete/reset before saving |
+| 🔎 **OCR Processing** | Extracts store name, date, amount, and tax entirely client-side — no image ever needs external OCR APIs |
+| ✏️ **Expense Management** | Edit any extracted field, assign/auto-guess categories, delete records |
+| 📊 **Monthly Insights** | Category breakdown pie chart, spending trend chart, top-category and total-spent stats |
+| 🔍 **Search & Filter** | Find expenses by store name/description or filter by category |
+| 📁 **CSV Export** | Export the current (filtered) expense list to a `.csv` file |
+| 📱 **Responsive Design** | Full desktop experience with a mobile-optimized bottom navigation |
+
+### Pages
+`Dashboard` · `Upload Receipt` · `Expense List` · `Expense Details` · `Monthly Summary`
+
+---
+
+## 🛠 Tech Stack
+
+**Frontend** — `client/`
+| Library | Role |
+|---|---|
+| React 18 + Vite | UI and build tooling |
+| React Router DOM | Client-side routing across pages |
+| **Tesseract.js** | In-browser OCR engine |
+| Recharts | Spending trend & category pie charts |
+| Axios | REST API communication |
+| lucide-react | Icon set |
+| date-fns | Date formatting utilities |
+
+**Backend** — `server/`
+| Library | Role |
+|---|---|
+| Express | REST API server |
+| Mongoose | MongoDB object modeling |
+| Multer | Receipt image upload handling |
+| CORS | Cross-origin access for the deployed frontend |
+| dotenv | Environment configuration |
+
+**Database:** MongoDB Atlas — `Receipts` and `Expenses` collections
+
+**Hosting:** Vercel (frontend) · Render (backend) · MongoDB Atlas (database)
+
+---
+
+## 📂 Project Structure
 
 ```
 expense-receipt-scanner/
-├── server/              # Node.js + Express + MongoDB API
-│   ├── config/db.js
-│   ├── models/          # Receipt.js, Expense.js
-│   ├── routes/          # receipts.js, expenses.js, summary.js
-│   ├── middleware/upload.js
-│   ├── uploads/          # receipt images saved here
+├── server/                    # Express + MongoDB API
+│   ├── config/db.js           # Mongoose connection
+│   ├── models/                # Receipt.js, Expense.js schemas
+│   ├── routes/                # receipts.js, expenses.js, summary.js
+│   ├── middleware/upload.js   # Multer image upload config
+│   ├── uploads/                # Saved receipt images
 │   └── server.js
-└── client/              # React (Vite) frontend
+│
+└── client/                    # React (Vite) frontend
     └── src/
-        ├── pages/        # Dashboard, UploadReceipt, ExpenseList, ExpenseDetails, MonthlySummary
-        ├── components/   # Sidebar, StatCard, CategoryBadge, ConfirmModal, Background
-        ├── utils/        # ocrParser.js (OCR text → structured fields), categories.js
-        └── api/api.js
+        ├── pages/             # Dashboard, UploadReceipt, ExpenseList,
+        │                      # ExpenseDetails, MonthlySummary
+        ├── components/        # Sidebar, StatCard, CategoryBadge, ConfirmModal
+        ├── utils/             # ocrParser.js, categories.js
+        └── api/api.js         # Axios API client
 ```
 
 ---
 
-## 2. Why MongoDB (not Supabase)?
+## ⚙️ How It Works
 
-Short answer: **go with MongoDB** for this project. A few reasons:
+```
+ ┌────────────┐     ┌───────────────┐     ┌──────────────┐     ┌────────────┐
+ │  Upload /   │ ──▶ │  Tesseract.js │ ──▶ │  Regex-based │ ──▶ │  Review &  │
+ │  Capture    │     │  (OCR, in-    │     │  Parser      │     │  Edit Form │
+ │  Image      │     │  browser)     │     │  (extracts   │     │            │
+ └────────────┘     └───────────────┘     │  fields)     │     └─────┬──────┘
+                                            └──────────────┘          │
+                                                                       ▼
+                              ┌───────────────────────┐     ┌──────────────────┐
+                              │  MongoDB (Receipts +  │ ◀── │  Express API      │
+                              │  Expenses collections)│     │  (Multer + REST)  │
+                              └───────────────────────┘     └──────────────────┘
+```
 
-- The assignment brief itself calls out **"Database Collections"** (Receipts,
-  Expenses) — that's MongoDB's vocabulary. Supabase is built on Postgres,
-  which uses **tables**, not collections, so using Mongo keeps your project
-  aligned with the spec.
-- Each receipt is a loosely-structured document (image path, OCR text,
-  extracted fields that may be partially missing/inaccurate) — that fits a
-  document database more naturally than a rigid relational schema.
-- MongoDB Atlas has a free tier that's simple to spin up for a course
-  project, and Mongoose gives you schema validation without giving up
-  flexibility.
-
-You don't *need* Supabase here — it would work too (Postgres + its storage
-buckets are fine for images), but it adds relational-schema overhead
-(migrations, foreign keys) that this project doesn't need. This build uses
-**MongoDB**, with receipt images stored on disk (`server/uploads/`) and
-their paths saved in MongoDB — that keeps things simple and free to deploy.
+OCR runs **entirely in the browser** — the raw image is only sent to the server once the user confirms and saves, keeping the extraction step fast and free of external API costs.
 
 ---
 
-## 3. Features Implemented
-
-- **Receipt Upload:** file upload, camera capture (mobile), delete/reset before saving
-- **OCR Processing:** Tesseract.js runs in the browser, extracts raw text, and a
-  parser (`utils/ocrParser.js`) pulls out store name, date, amount, and tax
-  using pattern matching
-- **Expense Management:** edit any extracted field before saving, category
-  selection (auto-guessed, editable), monthly summary with a category
-  breakdown pie chart and spending trend
-- **Pages:** Dashboard, Upload Receipt, Expense List (search + filter), Expense
-  Details (edit/delete), Monthly Summary (month switcher + charts)
-- **Design:** dark glassmorphism theme, layered gradient + grid background with
-  soft inner-shadow vignette (see `client/src/index.css` → `.app-background`),
-  fully responsive (bottom nav on mobile)
-
----
-
-## 4. Run It Locally in VS Code
+## 🚀 Getting Started Locally
 
 ### Prerequisites
-- [Node.js](https://nodejs.org) v18+ installed
-- A free [MongoDB Atlas](https://www.mongodb.com/cloud/atlas/register) cluster
-  (or local MongoDB) — you just need a connection string
+- [Node.js](https://nodejs.org) v18+
+- A free [MongoDB Atlas](https://www.mongodb.com/cloud/atlas/register) cluster (or local MongoDB)
 
-### Step 1 — Backend
+### 1. Clone the repo
+```bash
+git clone https://github.com/Dagar214/expense-receipt-scanner.git
+cd expense-receipt-scanner
+```
 
+### 2. Backend setup
 ```bash
 cd server
 npm install
 cp .env.example .env
 ```
-
-Edit `server/.env`:
-```
-MONGO_URI=mongodb+srv://<username>:<password>@cluster0.mongodb.net/expense-receipt-scanner
+Edit `server/.env` with your MongoDB connection string:
+```env
+MONGO_URI=mongodb+srv://<username>:<password>@<cluster-url>/expense-receipt-scanner
 PORT=5000
 CLIENT_ORIGIN=http://localhost:5173
 ```
-
 Run it:
 ```bash
 npm run dev
 ```
 You should see `Server running on port 5000` and `MongoDB connected: ...`.
 
-### Step 2 — Frontend
-
+### 3. Frontend setup
 Open a **second terminal**:
 ```bash
 cd client
 npm install
 cp .env.example .env
-```
-
-`client/.env` already points at `http://localhost:5000/api` by default — leave
-it as is for local dev.
-
-Run it:
-```bash
 npm run dev
 ```
-Open **http://localhost:5173** — you should see the dashboard.
+Open **http://localhost:5173** in your browser.
 
-### Step 3 — Test the flow
-1. Go to **Upload Receipt** → upload any receipt photo (or take one on
-   mobile) → click **Extract Details (OCR)**
-2. Review/edit the auto-filled Store Name, Amount, Tax, Date, Category
-3. Click **Save Expense** → you'll land on the Expense Details page
-4. Check **Expense List** and **Monthly Summary** to see it reflected
+### 4. Try it out
+1. Go to **Upload Receipt** → upload or capture a receipt image
+2. Click **Extract Details (OCR)** and wait for it to finish
+3. Review/correct the auto-filled fields
+4. Click **Save Expense**
+5. Check **Expense List** and **Monthly Summary** to see it reflected
 
-> OCR accuracy depends on photo clarity — a well-lit, straight-on photo of a
-> printed receipt works best. You can always fix any field by hand before saving.
-
----
-
-## 5. Push to GitHub
-
-```bash
-cd expense-receipt-scanner
-git init
-git add .
-git commit -m "Expense Receipt Scanner - mini project"
-git branch -M main
-git remote add origin https://github.com/<your-username>/<repo-name>.git
-git push -u origin main
-```
-
-Both `server/.gitignore` and `client/.gitignore` already exclude
-`node_modules`, `.env`, and `uploads/*` (except a `.gitkeep`) — so your
-Mongo URI and API keys never get committed.
+> 💡 OCR accuracy depends on image clarity — a well-lit, straight-on photo of a printed receipt works best. Any field can be corrected by hand before saving.
 
 ---
 
-## 6. Deploy (Render + Vercel + MongoDB Atlas)
+## 🔑 Environment Variables
 
-This mirrors the setup you've used before, so it should feel familiar.
+**`server/.env`**
+| Variable | Description |
+|---|---|
+| `MONGO_URI` | MongoDB Atlas (or local) connection string |
+| `PORT` | Port the Express server runs on (default `5000`) |
+| `CLIENT_ORIGIN` | The deployed frontend's URL, for CORS |
 
-### 6a. MongoDB Atlas
-1. Create a free cluster at Atlas → **Database Access**: create a user +
-   password → **Network Access**: allow `0.0.0.0/0` (or Render's IPs)
-2. Copy the connection string, e.g.
-   `mongodb+srv://user:pass@cluster0.mongodb.net/expense-receipt-scanner`
-
-### 6b. Backend on Render
-1. New **Web Service** → connect your GitHub repo
-2. **Root directory:** `server`
-3. **Build command:** `npm install`
-4. **Start command:** `npm start`
-5. **Environment variables:**
-   - `MONGO_URI` = your Atlas connection string
-   - `CLIENT_ORIGIN` = your Vercel URL (add after step 6c, comma-separate if you need more than one)
-   - `PORT` is set automatically by Render — you don't need to add it
-
-> **Important:** Render's free tier disks are **ephemeral** — files saved to
-> `server/uploads/` will be wiped on redeploy/restart. That's fine for demoing
-> the project, but if you want uploaded receipt images to persist long-term,
-> the fix is swapping local disk storage for a cloud bucket (e.g. Cloudinary
-> or an S3-compatible bucket) in `middleware/upload.js`. Not required for
-> the assignment, but worth mentioning if your teacher asks about production
-> readiness.
-
-### 6c. Frontend on Vercel
-1. New Project → import the same repo
-2. **Root directory:** `client`
-3. **Build command:** `npm run build` (auto-detected for Vite)
-4. **Output directory:** `dist` (auto-detected)
-5. **Environment variable:**
-   - `VITE_API_BASE_URL` = `https://<your-render-app>.onrender.com/api`
-6. Deploy, then go back to Render and set `CLIENT_ORIGIN` to your new Vercel URL
-   so CORS allows it.
-
-### 6d. Sanity check
-- Visit your Render URL directly → should show "Expense Receipt Scanner API is running"
-- Visit your Vercel URL → Dashboard should load without a "server not connected" error
-- If it still fails: check that `VITE_API_BASE_URL` ends in `/api`, and that
-  `CLIENT_ORIGIN` on Render **exactly** matches your Vercel domain (including `https://`)
+**`client/.env`**
+| Variable | Description |
+|---|---|
+| `VITE_API_URL` | Base URL of the backend API (e.g. `http://localhost:5000/api`) |
 
 ---
 
-## 7. Notes for Your Report / Resume
+## ☁️ Deployment
 
-- **Learning objectives covered:** OCR (Tesseract.js), image handling (upload +
-  camera capture + preview), data extraction (regex-based parsing of OCR
-  output), expense tracking (categorized records + monthly aggregation)
-- **Resume line (from your brief):** *"Built an OCR-powered receipt scanner
-  that extracts billing information and automatically creates categorized
-  expense records."*
+This project is deployed using a free-tier, three-service setup:
+
+| Service | Platform | Notes |
+|---|---|---|
+| Frontend | [Vercel](https://vercel.com) | Static Vite build, root directory `client` |
+| Backend | [Render](https://render.com) | Node web service, root directory `server` |
+| Database | [MongoDB Atlas](https://www.mongodb.com/atlas) | Free M0 cluster |
+
+> ⚠️ **Note on image persistence:** Render's free tier uses an ephemeral filesystem — files saved to `server/uploads/` are cleared on redeploy or after extended inactivity. This doesn't affect app functionality but is worth knowing for production use; the fix would be swapping local disk storage for a cloud bucket (e.g. Cloudinary or S3).
+
+---
+
+## 🎨 Design
+
+A dark **glassmorphism** aesthetic — layered gradient blobs, a subtle grid overlay, and an inner-shadow vignette across the background (`client/src/index.css` → `.app-background`), with translucent glass cards and a consistent indigo / teal / amber accent palette. Fully responsive, with a bottom navigation bar on mobile.
+
+---
+
+## 🗺 Roadmap Ideas
+
+- Cloud image storage (Cloudinary/S3) for persistent uploads in production
+- PDF export alongside CSV
+- Multi-currency support
+- Receipt-level notes and tags
+
+---
+
+## 👤 Author
+
+**Dev Dagar**
+GitHub: [@Dagar214](https://github.com/Dagar214)
+
+---
+
+## 📄 License
+
+This project was built as an academic mini-project. Free to use and adapt for learning purposes.
+
+---
+
+<p align="center">Built by Dev Dagar with React, Node.js, MongoDB, and Tesseract.js</p>

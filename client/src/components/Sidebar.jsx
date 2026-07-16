@@ -47,6 +47,7 @@ export default function Sidebar() {
       <div className="sidebar-footer">
         <p>Powered by OCR</p>
         <p className="sidebar-footer-sub">Tesseract.js · MongoDB</p>
+        <p className="sidebar-footer-credit">Developed by Dev Dagar</p>
       </div>
     </aside>
   );
